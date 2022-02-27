@@ -1,0 +1,24 @@
+.tooltip-outer {
+  position: relative;
+}
+.tooltip-popup {
+  padding: 8px;
+  background: var(--color-black);
+  border: 1px solid var(--color-gray-1);
+  z-index: 100000;
+  position: absolute;
+  border-radius: 8px;
+  display: flex;
+}
+.tooltip-popup.dark {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-9);
+}
+.tooltip-inner {
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--color-white);
+}
+.tooltip-inner.dark {
+  color: var(--color-black);
+}
