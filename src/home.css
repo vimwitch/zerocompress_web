@@ -19,6 +19,18 @@
   align-items: center;
 }
 
+.txdata {
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--color-gray-1);
+  color: var(--color-gray-9);
+}
+
+.txdata.dark {
+  background: var(--color-gray-9);
+  color: var(--color-gray-1);
+}
+
 .section-box.dark {
   /* border: 1px solid var(--color-white); */
 }

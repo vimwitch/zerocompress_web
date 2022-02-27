@@ -44,7 +44,7 @@ export default observer(({
         setLoading(false)
         setSuccessMessage(message ?? 'Success!')
         setSuccess(true)
-        setTimeout(() => setSuccess(false), 3000)
+        setTimeout(() => setSuccess(false), 2000)
       } else {
         setLoading(false)
       }

@@ -4,6 +4,8 @@ import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from '../src/Home'
 
+const node = 'https://opt-mainnet.g.alchemy.com/v2/wquJNw5twnWCHVfHU3cGyqKKkV50W9tJ'
+
 // Enables edge cdn - https://developers.cloudflare.com/workers/learning/how-the-cache-works/
 const DEBUG = false
 const ENABLE_ASSET_CACHE = true
@@ -16,6 +18,12 @@ addEventListener('fetch', (event) => {
 async function generateResponse(event) {
   // is it a request for ssr or a static asset?
   const isSSR = ! /.+\.[a-zA-Z]+$/.test(event.request.url)
+  if (event.request.url.indexOf('sample_transactions') !== -1) {
+    const transactions = await loadTransactions()
+    const response = new Response(JSON.stringify(transactions))
+    response.headers.set('content-type', 'text/json')
+    return response
+  }
   if (!isSSR && ENABLE_ASSET_CACHE) {
     // take a peek in the cache and return if the url is there
     const response = await caches.default.match(event.request.url)
@@ -78,4 +86,33 @@ async function staticAsset(event) {
     response.headers.set('Cache-Control', 'max-age=604800,s-maxage=604800,public')
   }
   return response
+}
+
+async function loadTransactions() {
+  let blockNumber = +(await ethRequest('eth_blockNumber'))
+  let transaction
+  while (!transaction) {
+    const block = await ethRequest('eth_getBlockByNumber', `0x${(blockNumber--).toString(16)}`, true)
+    transaction = block.transactions.find((tx) => tx.input && tx.input.length > 10)
+  }
+  return transaction
+}
+
+async function ethRequest(method, ...args) {
+  const id = Math.floor(Math.random() * 100000)
+  const res = await fetch(node, {
+    method: 'post',
+    body: JSON.stringify({
+      id,
+      jsonrpc: '2.0',
+      params: [...args],
+      method,
+    }),
+    cf: {
+      cacheTtl: 3,
+      cacheEverything: true,
+    }
+  })
+  const data = await res.json()
+  return data.result
 }
