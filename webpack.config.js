@@ -1,8 +1,8 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const { HtmlWebpackSkipAssetsPlugin } = require('html-webpack-skip-assets-plugin')
 
 module.exports = {
   entry: ['./src/index.js'],
@@ -46,14 +46,19 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'assets/index.ejs',
       filename: 'index.html',
-      inlineSource: '.(js|css)',
+      inlineSource: '.(js)',
+    }),
+    new HtmlWebpackSkipAssetsPlugin({
+      skipAssets: ['/styles.css'],
     }),
     new MiniCssExtractPlugin({
       filename: 'styles.css',
     })
-    // new HtmlWebpackInlineSourcePlugin(),
   ],
   optimization: {
+    splitChunks: {
+      chunks: 'all',
+    },
     minimizer: [
       `...`,
       new CssMinimizerPlugin(),

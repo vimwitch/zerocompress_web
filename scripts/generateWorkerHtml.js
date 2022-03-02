@@ -3,28 +3,15 @@ const path = require('path')
 
 ;(async () => {
   const styleData = await fs.readFile(path.join(__dirname, '../build/styles.css'))
-  const html =
-`
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A demo of the zerocompress algorithm.">
-    <meta property="og:title" content="zerocompress demo" />
-    <title>zerodemo</title>
-    <script defer src="/main.js"></script>
-
-    <!-- remove when adding favicon -->
-    <link rel="icon" href="data:,">
-
-    <style>
-      ${styleData}
-    </style>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-`
-  await fs.writeFile(path.join(__dirname, '../worker/html.js'), `export default \`${html}\``)
+  const indexTemplate = (await fs.readFile(path.join(__dirname, '../build/index.html'))).toString()
+  const finalIndex = indexTemplate.replace(
+    '</head>',
+    `
+<style>
+  ${styleData}
+</style>
+</head>
+    `
+  )
+  await fs.writeFile(path.join(__dirname, '../worker/html.js'), `export default \`${finalIndex}\``)
 })()
