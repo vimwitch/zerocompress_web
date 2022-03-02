@@ -10,6 +10,8 @@ const path = require('path')
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A demo of the zerocompress algorithm.">
+    <meta property="og:title" content="zerocompress demo" />
     <title>zerodemo</title>
     <script defer src="/main.js"></script>
 
