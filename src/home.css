@@ -19,11 +19,26 @@
   align-items: center;
 }
 
+@media (max-width: 780px) {
+  .section-container {
+    width: 90vw;
+  }
+}
+@media (min-width: 780px) {
+  .section-container {
+    width: 50vw;
+    min-width: 750px;
+    max-width: 1200px;
+  }
+}
+
 .txdata {
+  width: calc(100% - 8px);
   padding: 8px;
   border-radius: 12px;
   background: var(--color-gray-1);
   color: var(--color-gray-9);
+  word-break: break-all;
 }
 
 .txdata.dark {

@@ -1,6 +1,6 @@
 import React from 'react'
 import './textarea.css'
-import UIContext from '../contexts/interface'
+import UIContext from '@appliedzkp/kit/interface'
 import { observer } from 'mobx-react-lite'
 
 export default observer(({ ...props }) => {

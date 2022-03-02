@@ -13,6 +13,11 @@ module.exports = {
   },
   resolve: {
     extensions: ['*', '.js', '.jsx'],
+    alias: {
+      react: require.resolve('react'),
+      mobx: require.resolve('mobx'),
+      'mobx-react-lite': require.resolve('mobx-react-lite'),
+    }
   },
   module: {
     rules: [

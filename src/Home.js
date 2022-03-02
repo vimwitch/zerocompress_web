@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import './home.css'
 
-import Button from './components/Button'
-import Tooltip from './components/Tooltip'
+import Button from '@appliedzkp/kit/Button'
+import Tooltip from '@appliedzkp/kit/Tooltip'
 import Textarea from './components/Textarea'
 import { observer } from 'mobx-react-lite'
-import UIContext from './contexts/interface'
+import UIContext from '@appliedzkp/kit/interface'
 import { compress, gasCost } from 'zerocompress'
 import { parse } from './utils/parse-compressed'
 
@@ -72,7 +72,7 @@ export default observer(() => {
         </div>
       </div>
       <Spacer />
-      <div style={{ alignSelf: 'center' }}>
+      <div className="section-container" style={{ alignSelf: 'center',}}>
         <div style={{ display: 'flex' }}>
           <Button size="xsmall" onClick={async () => {
             const tx = await loadTransaction()
@@ -85,14 +85,11 @@ export default observer(() => {
             Recent TX
           </Button>
           <Spacer />
-          <Button size="xsmall" onClick={() => setInput({ data: '0x'+Array(8+64*4).fill('0').join('') })}>
-            Lots of Zeroes
-          </Button>
-          <Spacer />
           <Button size="xsmall" onClick={() => setInput({ data: uniswapTx })}>
             Uniswap Swap
           </Button>
           <div style={{ flex: 1 }} />
+          <Spacer />
           <Button size="xsmall" onClick={() => ui.setDarkmode(!ui.darkmode)}>
             {ui.darkmode ? 'Light' : 'Dark'}
           </Button>
@@ -100,7 +97,7 @@ export default observer(() => {
         <Spacer />
         <Textarea
           onChange={(e) => setInput({ data: e.target.value })}
-          style={{ width: '50vw' }}
+          style={{ width: '100%' }}
           rows="16"
           value={input.data}
           placeholder="Enter some tx data or click a button above"
@@ -119,7 +116,7 @@ export default observer(() => {
           )}
         </div>
         <Spacer />
-        <div className={`txdata ${ui.modeCssClass}`} style={{ maxWidth: '50vw', wordBreak: 'break-word' }}>
+        <div className={`txdata ${ui.modeCssClass}`}>
           {parse(output, outputPadding).map((part, index) => (
             <span title={part.info} key={part.data+index}>
               <mark className="highlight" style={{ ...part.style, borderRadius: '4px', margin: '0px 1px' }}>
@@ -129,7 +126,7 @@ export default observer(() => {
           ))}
         </div>
         {false && (
-          <div className={`txdata ${ui.modeCssClass}`} style={{ maxWidth: '50vw', wordBreak: 'break-word' }}>
+          <div className={`txdata ${ui.modeCssClass}`}>
             {output}
           </div>
         )}
@@ -158,11 +155,9 @@ export default observer(() => {
         alignItems: 'center',
         margin: '4px'
       }} onClick={() => window.open('https://medium.com/privacy-scaling-explorations')}>
-        <div>
-          Made with ❤️ at the EF
-        </div>
         <Spacer />
         <img src={require('../assets/eth.svg')} height="24" width="auto" />
+        <Spacer />
       </div>
     </div>
   )
