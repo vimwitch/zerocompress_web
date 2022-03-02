@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import './home.css'
 
 import Button from '@appliedzkp/kit/Button'
@@ -14,12 +15,36 @@ const Spacer = () => <div style={{ width: '8px', height: '8px' }} />
 const baseTxCost = 4414
 const uniswapTx = '0x128acb08000000000000000000000000eb465b6c56758a1ccff6fa56aaee190646a597a0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000005b3695d314000000000000000000000000000000000000000000000000000000000001341c9100000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000'
 
+async function loadTransactionById(id) {
+  const res = await fetch(`/load_transaction/${id}`)
+  return res.json()
+}
+
 async function loadTransaction() {
   const res = await fetch('/sample_transactions')
   return res.json()
 }
 
 export default observer(() => {
+  const { id } = useParams()
+  useEffect(() => {
+    ;(async () => {
+      if (!id) return
+      const { goerli, optimism } = await loadTransactionById(id)
+      if (!goerli && !optimism) return
+      if (goerli) {
+        setInput({
+          data: goerli.input,
+          url: `https://goerli.etherscan.io/tx/${id}`,
+        })
+      } else if (optimism) {
+        setInput({
+          data: optimism.input,
+          url: `https://optimistic.etherscan.io/tx/${id}`,
+        })
+      }
+    })()
+  }, [])
   const ui = React.useContext(UIContext)
   const [input, setInput] = useState({ data: '' })
   const [output, setOutput] = useState('0x')

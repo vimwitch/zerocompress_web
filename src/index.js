@@ -18,6 +18,7 @@ const RootApp = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/tx/:id" element={<Home />} />
       </Routes>
     </BrowserRouter>
   )

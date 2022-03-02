@@ -5,7 +5,8 @@ import ReactDOMServer from 'react-dom/server'
 import Home from '../src/Home'
 import UIContext, { Interface } from '@appliedzkp/kit/interface'
 
-const node = 'https://opt-mainnet.g.alchemy.com/v2/wquJNw5twnWCHVfHU3cGyqKKkV50W9tJ'
+const OPTIMISM_NODE = 'https://opt-mainnet.g.alchemy.com/v2/wquJNw5twnWCHVfHU3cGyqKKkV50W9tJ'
+const GOERLI_NODE = 'https://goerli.infura.io/v3/5b122dbc87ed4260bf9a2031e8a0e2aa'
 
 // Enables edge cdn - https://developers.cloudflare.com/workers/learning/how-the-cache-works/
 const DEBUG = false
@@ -21,6 +22,19 @@ async function generateResponse(event) {
   const isSSR = ! /.+\.[a-zA-Z]+$/.test(event.request.url)
   if (event.request.url.indexOf('sample_transactions') !== -1) {
     const transactions = await loadTransactions()
+    const response = new Response(JSON.stringify(transactions))
+    response.headers.set('content-type', 'text/json')
+    return response
+  } else if (event.request.url.indexOf('load_transaction') !== -1) {
+    const match = event.request.url.match(/0x[a-fA-F0-9]{64}/)
+    if (match === null) {
+      const response = new Response('not found')
+      response.headers.set('content-type', 'text/json')
+      return response
+    }
+    console.log(match[0])
+    const transactions = await loadTransactionById(match[0])
+    console.log(transactions)
     const response = new Response(JSON.stringify(transactions))
     response.headers.set('content-type', 'text/json')
     return response
@@ -99,17 +113,25 @@ async function staticAsset(event) {
   return response
 }
 
+async function loadTransactionById(hash) {
+  const [optimism, goerli]= await Promise.all([
+    ethRequest(OPTIMISM_NODE, 'eth_getTransactionByHash', hash).catch(() => '{}'),
+    ethRequest(GOERLI_NODE, 'eth_getTransactionByHash', hash).catch(() => '{}'),
+  ])
+  return { optimism, goerli }
+}
+
 async function loadTransactions() {
-  let blockNumber = +(await ethRequest('eth_blockNumber'))
+  let blockNumber = +(await ethRequest(OPTIMISM_NODE, 'eth_blockNumber'))
   let transaction
   while (!transaction) {
-    const block = await ethRequest('eth_getBlockByNumber', `0x${(blockNumber--).toString(16)}`, true)
+    const block = await ethRequest(OPTIMISM_NODE, 'eth_getBlockByNumber', `0x${(blockNumber--).toString(16)}`, true)
     transaction = block.transactions.find((tx) => tx.input && tx.input.length > 74)
   }
   return transaction
 }
 
-async function ethRequest(method, ...args) {
+async function ethRequest(node, method, ...args) {
   const id = Math.floor(Math.random() * 100000)
   const res = await fetch(node, {
     method: 'post',
