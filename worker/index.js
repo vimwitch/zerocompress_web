@@ -8,7 +8,7 @@ const node = 'https://opt-mainnet.g.alchemy.com/v2/wquJNw5twnWCHVfHU3cGyqKKkV50W
 
 // Enables edge cdn - https://developers.cloudflare.com/workers/learning/how-the-cache-works/
 const DEBUG = false
-const ENABLE_ASSET_CACHE = true
+const ENABLE_ASSET_CACHE = false
 const ENABLE_SSR_CACHE = false // TODO: cache bust after deployment
 
 addEventListener('fetch', (event) => {
@@ -93,7 +93,7 @@ async function loadTransactions() {
   let transaction
   while (!transaction) {
     const block = await ethRequest('eth_getBlockByNumber', `0x${(blockNumber--).toString(16)}`, true)
-    transaction = block.transactions.find((tx) => tx.input && tx.input.length > 10)
+    transaction = block.transactions.find((tx) => tx.input && tx.input.length > 74)
   }
   return transaction
 }

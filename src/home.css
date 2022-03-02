@@ -27,8 +27,12 @@
 }
 
 .txdata.dark {
-  background: var(--color-gray-9);
-  color: var(--color-gray-1);
+  /* background: var(--color-gray-9);
+  color: var(--color-gray-1); */
+}
+
+.highlight {
+  color: var(--color-black);
 }
 
 .section-box.dark {

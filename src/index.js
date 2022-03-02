@@ -7,12 +7,20 @@ import './index.css'
 import './colors.css'
 import UIContext from './contexts/interface'
 
-const RootApp = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Home />} />
-    </Routes>
-  </BrowserRouter>
-)
+const RootApp = () => {
+  const ui = React.useContext(UIContext)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      ui.loadSavedValue()
+    }
+  }, [])
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
 
 ReactDOM.hydrate(<RootApp />, document.getElementById('root'))

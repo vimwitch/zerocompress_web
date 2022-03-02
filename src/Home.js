@@ -6,7 +6,8 @@ import Tooltip from './components/Tooltip'
 import Textarea from './components/Textarea'
 import { observer } from 'mobx-react-lite'
 import UIContext from './contexts/interface'
-import { compressSingle, gasCost } from 'zerocompress'
+import { compress, gasCost } from 'zerocompress'
+import { parse } from './utils/parse-compressed'
 
 const Spacer = () => <div style={{ width: '8px', height: '8px' }} />
 
@@ -20,31 +21,35 @@ async function loadTransaction() {
 
 export default observer(() => {
   const ui = React.useContext(UIContext)
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
+  const [input, setInput] = useState({ data: '' })
+  const [output, setOutput] = useState('0x')
+  const [outputPadding, setOutputPadding] = useState(0)
   const [inputGas, setInputGas] = useState(0)
   const [outputGas, setOutputGas] = useState(0)
-  const [txUrl, setTxUrl] = useState('')
   useEffect(() => {
-    if (input.length % 2 !== 0) return
-    if (input.length === 0) {
+    const { data, url } = input
+    if (data.length % 2 !== 0) return
+    if (data.length === 0) {
       setInputGas(0)
       setOutputGas(0)
       setOutput('0x')
+      setOutputPadding(0)
       return
     }
-    setTxUrl(``)
-    setInputGas(gasCost(input))
+    setInputGas(gasCost(input.data))
     try {
-      const [func, data] = compressSingle(input, {
+      const [func, _data, padding] = compress(data, {
         addressSubs: {
-          '*': Math.floor(Math.random() * 100000),
+          '*': Math.floor(Math.random() * 2**24),
         }
       })
-      if (Array.isArray(data)) {
-        setOutput(`0x0ab241a0${data.join('').replace(/0x/g, '')}`)
+      if (Array.isArray(_data)) {
+        setOutput(`0x0ab241a0${_data.join('').replace(/0x/g, '')}`)
+        setOutputPadding(padding)
+        parse(`0x0ab241a0${_data.join('').replace(/0x/g, '')}`)
       } else {
-        setOutput(data)
+        setOutput(_data)
+        setOutputPadding(0)
       }
     } catch (e) {
       // do nothing
@@ -58,7 +63,11 @@ export default observer(() => {
   return (
     <div className={`container ${ui.modeCssClass}`}>
       <div className={`header ${ui.modeCssClass}`}>
-        <div className="header5">
+        <div
+          className="header5"
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+          onClick={() => window.open('https://github.com/vimwitch/zerocompress#zerocompress-')}
+        >
           zerocompress
         </div>
       </div>
@@ -67,17 +76,20 @@ export default observer(() => {
         <div style={{ display: 'flex' }}>
           <Button size="xsmall" onClick={async () => {
             const tx = await loadTransaction()
-            setInput(tx.input)
-            setTxUrl(`https://optimistic.etherscan.io/tx/${tx.hash}`)
+            setInput({
+              data: tx.input,
+              url: `https://optimistic.etherscan.io/tx/${tx.hash}`,
+            })
+            return 'Compressed!'
           }}>
             Recent TX
           </Button>
           <Spacer />
-          <Button size="xsmall" onClick={() => setInput('0x'+Array(8+64*4).fill('0').join(''))}>
+          <Button size="xsmall" onClick={() => setInput({ data: '0x'+Array(8+64*4).fill('0').join('') })}>
             Lots of Zeroes
           </Button>
           <Spacer />
-          <Button size="xsmall" onClick={() => setInput(uniswapTx)}>
+          <Button size="xsmall" onClick={() => setInput({ data: uniswapTx })}>
             Uniswap Swap
           </Button>
           <div style={{ flex: 1 }} />
@@ -87,10 +99,10 @@ export default observer(() => {
         </div>
         <Spacer />
         <Textarea
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => setInput({ data: e.target.value })}
           style={{ width: '50vw' }}
           rows="16"
-          value={input}
+          value={input.data}
           placeholder="Enter some tx data or click a button above"
         />
         <Spacer />
@@ -98,9 +110,9 @@ export default observer(() => {
           <div>
             Gas cost original: {inputGas}
           </div>
-          {txUrl && (
+          {input.url && (
             <Button size="xsmall" onClick={() => {
-              window.open(txUrl, '_blank')
+              window.open(input.url, '_blank')
             }}>
               View Transaction
             </Button>
@@ -108,20 +120,49 @@ export default observer(() => {
         </div>
         <Spacer />
         <div className={`txdata ${ui.modeCssClass}`} style={{ maxWidth: '50vw', wordBreak: 'break-word' }}>
-          {output}
+          {parse(output, outputPadding).map((part, index) => (
+            <span title={part.info} key={part.data+index}>
+              <mark className="highlight" style={{ ...part.style, borderRadius: '4px', margin: '0px 1px' }}>
+                {part.data}
+              </mark>
+            </span>
+          ))}
         </div>
+        {false && (
+          <div className={`txdata ${ui.modeCssClass}`} style={{ maxWidth: '50vw', wordBreak: 'break-word' }}>
+            {output}
+          </div>
+        )}
         <Spacer />
         <div>
           Gas cost compressed: {outputGas}
         </div>
         <Spacer />
-        <div>
+        <div style={{ display: 'flex' }}>
+          <Tooltip text="Calldata gas savings" />
+          <Spacer />
           Reduction: {inputGas === 0 ? 0 : Math.floor(100*(inputGas-outputGas)/inputGas)}%
         </div>
         <Spacer />
-        <div>
+        <div style={{ display: 'flex' }}>
+          <Tooltip text="Transactions include more data such as signature and nonce. This estimate takes the calldata as a fraction of the total data." />
+          <Spacer />
           Estimated tx cost reduction: {Math.floor(100*((inputGas+baseTxCost)-(outputGas+baseTxCost))/(inputGas+baseTxCost))}%
         </div>
+      </div>
+      <div style={{ flex: 1, minHeight: '20px' }} />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: '4px'
+      }} onClick={() => window.open('https://medium.com/privacy-scaling-explorations')}>
+        <div>
+          Made with ❤️ at the EF
+        </div>
+        <Spacer />
+        <img src={require('../assets/eth.svg')} height="24" width="auto" />
       </div>
     </div>
   )
