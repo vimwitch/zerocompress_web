@@ -23,20 +23,36 @@ async function generateResponse(event) {
   if (event.request.url.indexOf('sample_transactions') !== -1) {
     const transactions = await loadTransactions()
     const response = new Response(JSON.stringify(transactions))
-    response.headers.set('content-type', 'text/json')
+    response.headers.set('content-type', 'application/json')
     return response
   } else if (event.request.url.indexOf('load_transaction') !== -1) {
     const match = event.request.url.match(/0x[a-fA-F0-9]{64}/)
     if (match === null) {
       const response = new Response('not found')
-      response.headers.set('content-type', 'text/json')
+      response.headers.set('content-type', 'application/json')
       return response
     }
-    console.log(match[0])
     const transactions = await loadTransactionById(match[0])
-    console.log(transactions)
     const response = new Response(JSON.stringify(transactions))
-    response.headers.set('content-type', 'text/json')
+    response.headers.set('content-type', 'application/json')
+    return response
+  } else if (event.request.url.indexOf('latest_transactions') !== -1) {
+    const { optimism, goerli } = await loadBlocks()
+    const goerliTransactions = goerli
+      .map((block) => {
+        return block.transactions.filter((tx) => typeof tx.input === 'string' && tx.input.length > 4)
+      })
+      .flat()
+    const optimismTransactions = optimism
+      .map((block) => {
+        return block.transactions.filter((tx) => typeof tx.input === 'string' && tx.input.length > 4)
+      })
+      .flat()
+    const response = new Response(JSON.stringify({
+      optimism: optimismTransactions,
+      goerli: goerliTransactions,
+    }))
+    response.headers.set('content-type', 'application/json')
     return response
   }
   if (!isSSR && ENABLE_ASSET_CACHE) {
@@ -125,25 +141,66 @@ async function loadTransactions() {
   let blockNumber = +(await ethRequest(OPTIMISM_NODE, 'eth_blockNumber'))
   let transaction
   while (!transaction) {
-    const block = await ethRequest(OPTIMISM_NODE, 'eth_getBlockByNumber', `0x${(blockNumber--).toString(16)}`, true)
+    const block = await ethRequest(
+      OPTIMISM_NODE,
+      'eth_getBlockByNumber',
+      [`0x${(blockNumber--).toString(16)}`, true],
+      {
+        cacheTtl: 60*60,
+      }
+    )
     transaction = block.transactions.find((tx) => tx.input && tx.input.length > 74)
   }
   return transaction
 }
 
-async function ethRequest(node, method, ...args) {
-  const id = Math.floor(Math.random() * 100000)
+async function loadBlocks() {
+  const optimismBlockNum = +(await ethRequest(OPTIMISM_NODE, 'eth_blockNumber'))
+  const goerliBlockNum = +(await ethRequest(GOERLI_NODE, 'eth_blockNumber'))
+  const optimismBlocks = []
+  const goerliBlocks = []
+  for (let x = 0; x < 5; x++) {
+    optimismBlocks.push(
+      ethRequest(
+        OPTIMISM_NODE,
+        'eth_getBlockByNumber',
+        [`0x${(optimismBlockNum-x).toString(16)}`, true],
+        {
+          cacheTtl: 60*60
+        }
+      )
+    )
+    goerliBlocks.push(
+      ethRequest(
+        GOERLI_NODE,
+        'eth_getBlockByNumber',
+        [`0x${(goerliBlockNum-x).toString(16)}`, true],
+        {
+          cacheTtl: 60*60
+        }
+      )
+    )
+  }
+  return {
+    optimism: (await Promise.all(optimismBlocks)),
+    goerli: (await Promise.all(goerliBlocks)),
+  }
+}
+
+async function ethRequest(node, method, params = [], cf = {}) {
+  const id = Math.floor(Math.random() * 10000000000)
   const res = await fetch(node, {
     method: 'post',
     body: JSON.stringify({
-      id,
       jsonrpc: '2.0',
-      params: [...args],
+      id,
+      params: [params].flat(),
       method,
     }),
     cf: {
       cacheTtl: 3,
       cacheEverything: true,
+      ...cf,
     }
   })
   const data = await res.json()

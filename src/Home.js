@@ -7,6 +7,7 @@ import Tooltip from '@appliedzkp/kit/Tooltip'
 import Textarea from './components/Textarea'
 import { observer } from 'mobx-react-lite'
 import UIContext from '@appliedzkp/kit/interface'
+import TransactionContext from './contexts/transactions'
 import { compress, gasCost } from 'zerocompress'
 import { parse } from './utils/parse-compressed'
 
@@ -46,6 +47,7 @@ export default observer(() => {
     })()
   }, [])
   const ui = React.useContext(UIContext)
+  const txs = React.useContext(TransactionContext)
   const [input, setInput] = useState({ data: '' })
   const [output, setOutput] = useState('0x')
   const [outputPadding, setOutputPadding] = useState(0)
@@ -171,6 +173,33 @@ export default observer(() => {
           <Spacer />
           Estimated tx cost reduction: {Math.floor(100*((inputGas+baseTxCost)-(outputGas+baseTxCost))/(inputGas+baseTxCost))}%
         </div>
+      </div>
+      <Spacer />
+      <div className="header6" style={{ alignSelf: 'center' }}>
+        Recent Transactions
+      </div>
+      <Spacer />
+      <div style={{ alignSelf: 'center', display: 'flex', flexDirection: 'column' }}>
+        {txs.visibleTxs
+          .map((tx) => (
+            <div className={`tx-cell ${ui.modeCssClass}`} key={tx.hash}>
+              <div>{tx.hash.slice(0, 25)}</div>
+              <Spacer />
+              <div>Reduction: {Math.floor(100*((tx.originalGas+baseTxCost)-(tx.compressedGas+baseTxCost))/(tx.originalGas+baseTxCost))}%</div>
+              <div style={{ flex: 1, minWidth: '8px' }} />
+              <Button size="xsmall" onClick={() => setInput({
+                data: tx.input,
+                url: `https://optimistic.etherscan.io/tx/${tx.hash}`,
+              })}>
+                See compression
+              </Button>
+            </div>
+          )
+        )}
+      </div>
+      <Spacer />
+      <div style={{ alignSelf: 'center' }}>
+        Possible L1 gas savings since you've been here: {txs.actualGas - txs.compressedGas}
       </div>
       <div style={{ flex: 1, minHeight: '20px' }} />
       <div style={{

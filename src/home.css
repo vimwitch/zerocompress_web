@@ -53,3 +53,14 @@
 .section-box.dark {
   /* border: 1px solid var(--color-white); */
 }
+
+.tx-cell {
+  display: flex;
+  padding: 4px;
+  margin: 4px;
+  border: 1px solid var(--color-black);
+  align-items: center;
+}
+.tx-cell.dark {
+  border: 1px solid var(--color-white);
+}

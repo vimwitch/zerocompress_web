@@ -6,12 +6,15 @@ import Home from './Home'
 import './index.css'
 import '@appliedzkp/kit/colors.css'
 import UIContext from '@appliedzkp/kit/interface'
+import TransactionContext from './contexts/transactions'
 
 const RootApp = () => {
   const ui = React.useContext(UIContext)
+  const txs = React.useContext(TransactionContext)
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       ui.load()
+      txs.load()
     }
   }, [])
   return (
