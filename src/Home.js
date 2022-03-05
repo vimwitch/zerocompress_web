@@ -4,6 +4,7 @@ import './home.css'
 
 import Button from '@appliedzkp/kit/Button'
 import Tooltip from '@appliedzkp/kit/Tooltip'
+import Checkbox from '@appliedzkp/kit/Checkbox'
 import Textarea from './components/Textarea'
 import { observer } from 'mobx-react-lite'
 import UIContext from '@appliedzkp/kit/interface'
@@ -51,6 +52,7 @@ export default observer(() => {
   const [outputPadding, setOutputPadding] = useState(0)
   const [inputGas, setInputGas] = useState(0)
   const [outputGas, setOutputGas] = useState(0)
+  const [showingVisual, setShowingVisual] = useState(false)
   useEffect(() => {
     const { data, url } = input
     if (data.length % 2 !== 0) return
@@ -141,35 +143,49 @@ export default observer(() => {
           )}
         </div>
         <Spacer />
-        <div className={`txdata ${ui.modeCssClass}`}>
-          {parse(output, outputPadding).map((part, index) => (
-            <span title={part.info} key={part.data+index}>
-              <mark className="highlight" style={{ ...part.style, borderRadius: '4px', margin: '0px 1px' }}>
-                {part.data}
-              </mark>
-            </span>
-          ))}
-        </div>
-        {false && (
+        {showingVisual &&
+          <div className={`txdata ${ui.modeCssClass}`}>
+            {parse(output, outputPadding).map((part, index) => (
+              <span title={part.info} key={part.data+index}>
+                <mark className="highlight" style={{ ...part.style, borderRadius: '4px', margin: '0px 1px' }}>
+                  {part.data}
+                </mark>
+              </span>
+            ))}
+          </div>
+        }
+        {!showingVisual && (
           <div className={`txdata ${ui.modeCssClass}`}>
             {output}
           </div>
         )}
-        <Spacer />
-        <div>
-          Gas cost compressed: {outputGas}
-        </div>
-        <Spacer />
-        <div style={{ display: 'flex' }}>
-          <Tooltip text="Calldata gas savings" />
-          <Spacer />
-          Reduction: {inputGas === 0 ? 0 : Math.floor(100*(inputGas-outputGas)/inputGas)}%
-        </div>
-        <Spacer />
-        <div style={{ display: 'flex' }}>
-          <Tooltip text="Transactions include more data such as signature and nonce. This estimate takes the calldata as a fraction of the total data." />
-          <Spacer />
-          Estimated tx cost reduction: {Math.floor(100*((inputGas+baseTxCost)-(outputGas+baseTxCost))/(inputGas+baseTxCost))}%
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <Spacer />
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Checkbox onChange={setShowingVisual} />
+              <Spacer />
+              <span>Show visualizer</span>
+            </div>
+            <Spacer />
+            <div>
+              Gas cost compressed: {outputGas}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <Spacer />
+            <div className="info-container">
+              <div>Reduction: {inputGas === 0 ? 0 : Math.floor(100*(inputGas-outputGas)/inputGas)}%</div>
+              <Spacer />
+              <Tooltip text="Calldata gas savings" />
+            </div>
+            <Spacer />
+            <div className="info-container">
+              <div>Estimated tx cost reduction: {Math.floor(100*((inputGas+baseTxCost)-(outputGas+baseTxCost))/(inputGas+baseTxCost))}%</div>
+              <Spacer />
+              <Tooltip text="Transactions include more data such as signature and nonce. This estimate takes the calldata as a fraction of the total data." />
+            </div>
+          </div>
         </div>
       </div>
       <div style={{ flex: 1, minHeight: '20px' }} />

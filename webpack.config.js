@@ -49,7 +49,7 @@ module.exports = {
       inlineSource: '.(js)',
     }),
     new HtmlWebpackSkipAssetsPlugin({
-      skipAssets: ['/styles.css'],
+      skipAssets: process.argv.mode === 'production' ? ['/styles.css'] : [],
     }),
     new MiniCssExtractPlugin({
       filename: 'styles.css',

@@ -8,7 +8,7 @@ const path = require('path')
     '</head>',
     `
 <style>
-  ${styleData}
+  ${styleData.toString().replace('\\', '\\\\')}
 </style>
 </head>
     `

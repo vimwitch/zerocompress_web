@@ -32,6 +32,21 @@
   }
 }
 
+@media(max-width: 499px) {
+  .info-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+}
+@media(min-width: 499px) {
+  .info-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}
+
 .txdata {
   width: calc(100% - 8px);
   padding: 8px;
