@@ -13,11 +13,6 @@ module.exports = {
   },
   resolve: {
     extensions: ['*', '.js', '.jsx'],
-    alias: {
-      react: require.resolve('react'),
-      mobx: require.resolve('mobx'),
-      'mobx-react-lite': require.resolve('mobx-react-lite'),
-    }
   },
   module: {
     rules: [
@@ -35,7 +30,7 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        exclude: /node_modules/,
+        // exclude: /node_modules/,
         use: [{
           loader: MiniCssExtractPlugin.loader,
         }, 'css-loader',]
